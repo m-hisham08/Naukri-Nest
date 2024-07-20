@@ -7,15 +7,36 @@ import {
   FlatList,
   TouchableOpacity,
   SafeAreaView,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import JobCard from "../components/JobCard";
+
+const JobCard = ({ job, onPress }) => (
+  <TouchableOpacity style={styles.card} onPress={onPress}>
+    <Image source={{ uri: job.hiringOrganizationLogo }} style={styles.logo} />
+    <View style={styles.jobInfo}>
+      <Text style={styles.jobTitle}>{job.title}</Text>
+      <Text style={styles.companyName}>{job.hiringOrganizationName}</Text>
+      <View style={styles.jobDetails}>
+        <Ionicons name="location-outline" size={16} color="#666" />
+        <Text style={styles.jobDetailText}>{job.location}</Text>
+        <Ionicons
+          name="briefcase-outline"
+          size={16}
+          color="#666"
+          style={styles.workModeIcon}
+        />
+        <Text style={styles.jobDetailText}>{job.workMode}</Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+);
 
 export default function HomeScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [jobs, setJobs] = useState([]);
 
-  // Static job data (updated with more details)
+  // Static job data
   const staticJobData = [
     {
       id: "66379fb86e9d493dae9761d1",
@@ -69,6 +90,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <Text style={styles.header}>Naukri Nest</Text>
         <View style={styles.searchContainer}>
           <Ionicons
             name="search"
@@ -103,11 +125,16 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#F2F2F7",
   },
   container: {
     flex: 1,
     padding: 20,
+  },
+  header: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
   },
   searchContainer: {
     flexDirection: "row",
@@ -132,5 +159,50 @@ const styles = StyleSheet.create({
   },
   jobList: {
     paddingBottom: 20,
+  },
+  card: {
+    flexDirection: "row",
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 16,
+  },
+  jobInfo: {
+    flex: 1,
+  },
+  jobTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  companyName: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 4,
+  },
+  jobDetails: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  jobDetailText: {
+    fontSize: 14,
+    color: "#666",
+    marginLeft: 4,
+    marginRight: 12,
+  },
+  workModeIcon: {
+    marginLeft: 12,
   },
 });
