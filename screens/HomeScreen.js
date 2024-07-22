@@ -14,16 +14,44 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
+import AnimatedLoader from "./AnimatedLoader";
 
-const API_BASE_URL = 'https://6538-152-58-240-187.ngrok-free.app';
+const API_BASE_URL = "https://d1d5-103-157-238-248.ngrok-free.app";
+
+const getIconForJob = (title) => {
+  switch (title.toLowerCase()) {
+    case "software developer":
+      return "code-slash-outline";
+    case "digital marketer":
+      return "megaphone-outline";
+    case "data scientist":
+      return "analytics-outline";
+    case "ux designer":
+      return "color-palette-outline";
+    case "product manager":
+      return "briefcase-outline";
+    case "full stack developer":
+      return "layers-outline";
+    case "ai/ml engineer":
+      return "hardware-chip-outline";
+    case "cloud architect":
+      return "cloud-outline";
+    case "cybersecurity analyst":
+      return "shield-checkmark-outline";
+    case "devops engineer":
+      return "git-network-outline";
+    default:
+      return "briefcase-outline";
+  }
+};
 
 const JobCard = ({ job, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
-    <Image 
-      source={{ uri: job.logo_photo_url || 'https://via.placeholder.com/150' }} 
-      style={styles.logo} 
+    <Image
+      source={{ uri: job.logo_photo_url || "https://via.placeholder.com/150" }}
+      style={styles.logo}
     />
     <View style={styles.jobInfo}>
       <Text style={styles.jobTitle}>{job.title}</Text>
@@ -39,34 +67,557 @@ const JobCard = ({ job, onPress }) => (
 const PopularJobCard = ({ title, onPress }) => (
   <TouchableOpacity style={styles.popularCard} onPress={onPress}>
     <View style={styles.popularCardContent}>
-      <Text style={styles.popularJobTitle}>{title}</Text>
-      <View style={styles.arrowContainer}>
-        <Ionicons name="arrow-forward" size={20} color="#007AFF" />
+      <View style={styles.iconContainer}>
+        <Ionicons name={getIconForJob(title)} size={24} color="#007AFF" />
       </View>
+      <View style={styles.textContainer}>
+        <Text style={styles.popularJobTitle}>{title}</Text>
+        <Text style={styles.exploreText}>Explore opportunities</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={24} color="#007AFF" />
     </View>
   </TouchableOpacity>
 );
 
-const countries = ["India", "UAE"];
+const countries = ["India", "United Arab Emirates"];
 
 const statesByCountry = {
-  "India": [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
-    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", 
-    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", 
-    "West Bengal"
+  India: [
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Delhi (NCT)",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Puducherry",
+    "Andaman and Nicobar Islands",
+    "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Lakshadweep",
   ],
-  "UAE": [
-    "Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Umm Al Quwain", "Ras Al Khaimah", "Fujairah"
-  ]
+  "United Arab Emirates": [
+    "Abu Dhabi",
+    "Dubai",
+    "Sharjah",
+    "Ajman",
+    "Umm Al Quwain",
+    "Ras Al Khaimah",
+    "Fujairah",
+  ],
 };
 
 const citiesByState = {
-  "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangaluru", "Belgaum"],
-  "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"],
-  "Dubai": ["Dubai City", "Deira", "Bur Dubai"],
-  "Abu Dhabi": ["Abu Dhabi City", "Al Ain", "Ruwais"]
+  "Andhra Pradesh": [
+    "Visakhapatnam",
+    "Vijayawada",
+    "Guntur",
+    "Nellore",
+    "Kurnool",
+    "Tirupati",
+    "Kakinada",
+    "Rajahmundry",
+    "Kadapa",
+    "Anantapur",
+  ],
+  "Arunachal Pradesh": [
+    "Itanagar",
+    "Naharlagun",
+    "Pasighat",
+    "Namsai",
+    "Tawang",
+    "Ziro",
+    "Bomdila",
+    "Aalo",
+    "Tezu",
+    "Roing",
+  ],
+  Assam: [
+    "Guwahati",
+    "Silchar",
+    "Dibrugarh",
+    "Jorhat",
+    "Nagaon",
+    "Tinsukia",
+    "Tezpur",
+    "Bongaigaon",
+    "Dhubri",
+    "Diphu",
+  ],
+  Bihar: [
+    "Patna",
+    "Gaya",
+    "Bhagalpur",
+    "Muzaffarpur",
+    "Purnia",
+    "Darbhanga",
+    "Bihar Sharif",
+    "Arrah",
+    "Begusarai",
+    "Katihar",
+  ],
+  Chhattisgarh: [
+    "Raipur",
+    "Bhilai",
+    "Bilaspur",
+    "Korba",
+    "Durg",
+    "Rajnandgaon",
+    "Raigarh",
+    "Jagdalpur",
+    "Ambikapur",
+    "Dhamtari",
+  ],
+  Goa: [
+    "Panaji",
+    "Margao",
+    "Vasco da Gama",
+    "Mapusa",
+    "Ponda",
+    "Bicholim",
+    "Curchorem",
+    "Cuncolim",
+    "Valpoi",
+    "Sanquelim",
+  ],
+  Gujarat: [
+    "Ahmedabad",
+    "Surat",
+    "Vadodara",
+    "Rajkot",
+    "Bhavnagar",
+    "Jamnagar",
+    "Junagadh",
+    "Gandhinagar",
+    "Nadiad",
+    "Mehsana",
+  ],
+  Haryana: [
+    "Faridabad",
+    "Gurgaon",
+    "Panipat",
+    "Ambala",
+    "Yamunanagar",
+    "Rohtak",
+    "Hisar",
+    "Karnal",
+    "Sonipat",
+    "Panchkula",
+  ],
+  "Himachal Pradesh": [
+    "Shimla",
+    "Mandi",
+    "Solan",
+    "Dharamshala",
+    "Kullu",
+    "Baddi",
+    "Nahan",
+    "Hamirpur",
+    "Una",
+    "Palampur",
+  ],
+  Jharkhand: [
+    "Ranchi",
+    "Jamshedpur",
+    "Dhanbad",
+    "Bokaro Steel City",
+    "Deoghar",
+    "Hazaribagh",
+    "Giridih",
+    "Ramgarh",
+    "Phusro",
+    "Chirkunda",
+  ],
+  Karnataka: [
+    "Bengaluru",
+    "Mysuru",
+    "Hubballi-Dharwad",
+    "Mangaluru",
+    "Belagavi",
+    "Kalaburagi",
+    "Ballari",
+    "Vijayapura",
+    "Shivamogga",
+    "Tumakuru",
+  ],
+  Kerala: [
+    "Thiruvananthapuram",
+    "Kochi",
+    "Kozhikode",
+    "Thrissur",
+    "Kollam",
+    "Alappuzha",
+    "Kannur",
+    "Palakkad",
+    "Kottayam",
+    "Malappuram",
+  ],
+  "Madhya Pradesh": [
+    "Indore",
+    "Bhopal",
+    "Jabalpur",
+    "Gwalior",
+    "Ujjain",
+    "Sagar",
+    "Dewas",
+    "Satna",
+    "Ratlam",
+    "Rewa",
+  ],
+  Maharashtra: [
+    "Mumbai",
+    "Pune",
+    "Nagpur",
+    "Thane",
+    "Nashik",
+    "Aurangabad",
+    "Solapur",
+    "Kolhapur",
+    "Navi Mumbai",
+    "Amravati",
+  ],
+  Manipur: [
+    "Imphal",
+    "Thoubal",
+    "Kakching",
+    "Ukhrul",
+    "Churachandpur",
+    "Bishnupur",
+    "Senapati",
+    "Jiribam",
+    "Chandel",
+    "Tamenglong",
+  ],
+  Meghalaya: [
+    "Shillong",
+    "Tura",
+    "Jowai",
+    "Nongstoin",
+    "Williamnagar",
+    "Baghmara",
+    "Resubelpara",
+    "Nongpoh",
+    "Khliehriat",
+    "Mawkyrwat",
+  ],
+  Mizoram: [
+    "Aizawl",
+    "Lunglei",
+    "Champhai",
+    "Serchhip",
+    "Kolasib",
+    "Lawngtlai",
+    "Saitual",
+    "Khawzawl",
+    "Hnahthial",
+    "Mamit",
+  ],
+  Nagaland: [
+    "Kohima",
+    "Dimapur",
+    "Mokokchung",
+    "Tuensang",
+    "Wokha",
+    "Zunheboto",
+    "Mon",
+    "Phek",
+    "Kiphire",
+    "Longleng",
+  ],
+  Odisha: [
+    "Bhubaneswar",
+    "Cuttack",
+    "Rourkela",
+    "Berhampur",
+    "Sambalpur",
+    "Puri",
+    "Balasore",
+    "Bhadrak",
+    "Baripada",
+    "Jharsuguda",
+  ],
+  Punjab: [
+    "Ludhiana",
+    "Amritsar",
+    "Jalandhar",
+    "Patiala",
+    "Bathinda",
+    "Mohali",
+    "Pathankot",
+    "Hoshiarpur",
+    "Batala",
+    "Moga",
+  ],
+  Rajasthan: [
+    "Jaipur",
+    "Jodhpur",
+    "Udaipur",
+    "Kota",
+    "Bikaner",
+    "Ajmer",
+    "Bhilwara",
+    "Alwar",
+    "Sikar",
+    "Sri Ganganagar",
+  ],
+  Sikkim: [
+    "Gangtok",
+    "Namchi",
+    "Gyalshing",
+    "Mangan",
+    "Rangpo",
+    "Singtam",
+    "Jorethang",
+    "Nayabazar",
+    "Ravangla",
+    "Chungthang",
+  ],
+  "Tamil Nadu": [
+    "Chennai",
+    "Coimbatore",
+    "Madurai",
+    "Tiruchirappalli",
+    "Salem",
+    "Tirunelveli",
+    "Tiruppur",
+    "Vellore",
+    "Erode",
+    "Thoothukkudi",
+  ],
+  Telangana: [
+    "Hyderabad",
+    "Warangal",
+    "Nizamabad",
+    "Karimnagar",
+    "Ramagundam",
+    "Khammam",
+    "Mahbubnagar",
+    "Nalgonda",
+    "Adilabad",
+    "Suryapet",
+  ],
+  Tripura: [
+    "Agartala",
+    "Udaipur",
+    "Dharmanagar",
+    "Kailasahar",
+    "Belonia",
+    "Khowai",
+    "Ambassa",
+    "Kumarghat",
+    "Sabroom",
+    "Amarpur",
+  ],
+  "Uttar Pradesh": [
+    "Lucknow",
+    "Kanpur",
+    "Ghaziabad",
+    "Agra",
+    "Varanasi",
+    "Meerut",
+    "Prayagraj",
+    "Bareilly",
+    "Aligarh",
+    "Moradabad",
+  ],
+  Uttarakhand: [
+    "Dehradun",
+    "Haridwar",
+    "Rishikesh",
+    "Haldwani",
+    "Rudrapur",
+    "Kashipur",
+    "Roorkee",
+    "Pithoragarh",
+    "Ramnagar",
+    "Khatima",
+  ],
+  "West Bengal": [
+    "Kolkata",
+    "Asansol",
+    "Siliguri",
+    "Durgapur",
+    "Bardhaman",
+    "Malda City",
+    "Baharampur",
+    "Habra",
+    "Kharagpur",
+    "Shantipur",
+  ],
+  "Delhi (NCT)": [
+    "New Delhi",
+    "Delhi",
+    "Najafgarh",
+    "Nangloi Jat",
+    "Narela",
+    "Karol Bagh",
+    "Paharganj",
+    "Connaught Place",
+    "Mehrauli",
+    "Dwarka",
+  ],
+  "Jammu and Kashmir": [
+    "Srinagar",
+    "Jammu",
+    "Anantnag",
+    "Baramulla",
+    "Udhampur",
+    "Kathua",
+    "Sopore",
+    "Kupwara",
+    "Pulwama",
+    "Poonch",
+  ],
+  Ladakh: [
+    "Leh",
+    "Kargil",
+    "Diskit",
+    "Khalsi",
+    "Shey",
+    "Zanskar",
+    "Nubra",
+    "Nyoma",
+    "Drass",
+    "Likir",
+  ],
+  Puducherry: [
+    "Puducherry",
+    "Karaikal",
+    "Yanam",
+    "Mahe",
+    "Ozhukarai",
+    "Villianur",
+    "Ariyankuppam",
+    "Bahour",
+    "Mannadipet",
+    "Nettapakkam",
+  ],
+  "Andaman and Nicobar Islands": [
+    "Port Blair",
+    "Diglipur",
+    "Mayabunder",
+    "Rangat",
+    "Havelock Island",
+    "Car Nicobar",
+    "Little Andaman",
+    "Neil Island",
+    "Kamorta",
+    "Campbell Bay",
+  ],
+  Chandigarh: ["Chandigarh"],
+  "Dadra and Nagar Haveli and Daman and Diu": [
+    "Daman",
+    "Diu",
+    "Silvassa",
+    "Amli",
+    "Dadra",
+    "Naroli",
+    "Samarvarni",
+    "Khanvel",
+    "Kadaiya",
+    "Rakholi",
+  ],
+  Lakshadweep: [
+    "Kavaratti",
+    "Agatti",
+    "Amini",
+    "Andrott",
+    "Minicoy",
+    "Kalpeni",
+    "Kiltan",
+    "Chetlat",
+    "Kadmat",
+    "Bitra",
+  ],
+
+  // United Arab Emirates
+  "Abu Dhabi": [
+    "Abu Dhabi City",
+    "Al Ain",
+    "Madinat Zayed",
+    "Ruwais",
+    "Ghayathi",
+    "Liwa Oasis",
+    "Delma Island",
+    "Al Mirfa",
+    "Al Sila",
+    "Habshan",
+  ],
+  Dubai: [
+    "Dubai City",
+    "Deira",
+    "Bur Dubai",
+    "Jumeirah",
+    "Al Barsha",
+    "Dubai Marina",
+    "Palm Jumeirah",
+    "Dubai Silicon Oasis",
+    "Dubai Investment Park",
+    "Jebel Ali",
+  ],
+  Sharjah: [
+    "Sharjah City",
+    "Al Dhaid",
+    "Khor Fakkan",
+    "Kalba",
+    "Dibba Al-Hisn",
+    "Al Hamriyah",
+    "Al Madam",
+    "Mleiha",
+    "Al Batayeh",
+    "Nahwa",
+  ],
+  Ajman: ["Ajman City", "Masfout", "Manama"],
+  "Umm Al Quwain": [
+    "Umm Al Quwain City",
+    "Falaj Al Mualla",
+    "Al Rafaah",
+    "Al Rashidiya",
+    "Al Riqqah",
+    "Al Medfouna",
+  ],
+  "Ras Al Khaimah": [
+    "Ras Al Khaimah City",
+    "Al Jazirah Al Hamra",
+    "Digdaga",
+    "Khatt",
+    "Masafi",
+    "Rams",
+    "Al Nakheel",
+  ],
+  Fujairah: [
+    "Fujairah City",
+    "Dibba Al-Fujairah",
+    "Al Bidya",
+    "Masafi",
+    "Qidfa",
+    "Al Siji",
+    "Al Taween",
+  ],
 };
 
 const popularJobs = [
@@ -84,7 +635,7 @@ const popularJobs = [
   "Frontend Developer",
   "Backend Developer",
   "Mobile App Developer",
-  "Blockchain Developer"
+  "Blockchain Developer",
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -100,7 +651,11 @@ export default function HomeScreen({ navigation }) {
   const fetchJobs = async (query, loc) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/jobs/?search=${encodeURIComponent(query)}&location=${encodeURIComponent(loc)}`);
+      const response = await fetch(
+        `${API_BASE_URL}/api/jobs/?search=${encodeURIComponent(
+          query
+        )}&location=${encodeURIComponent(loc)}`
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -149,7 +704,12 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.container}>
         <Text style={styles.header}>Naukri Nest</Text>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={24} color="gray" style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={24}
+            color="gray"
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search for jobs..."
@@ -172,7 +732,12 @@ export default function HomeScreen({ navigation }) {
           </Text>
         )}
         {isLoading ? (
-          <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+          <View style={styles.loaderContainer}>
+            <AnimatedLoader />
+            <Text style={styles.loaderText}>
+              Searching for your dream job...
+            </Text>
+          </View>
         ) : searchQuery ? (
           <FlatList
             data={jobs}
@@ -367,10 +932,10 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   emptyListText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 20,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   loader: {
     marginTop: 20,
@@ -403,7 +968,7 @@ const styles = StyleSheet.create({
   },
   pickerLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 10,
     marginBottom: 5,
   },
@@ -444,12 +1009,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   popularCardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
   },
   popularJobTitle: {
@@ -458,8 +1023,54 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   arrowContainer: {
-    backgroundColor: '#F0F8FF',
+    backgroundColor: "#F0F8FF",
     borderRadius: 20,
     padding: 8,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loaderText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: "#007AFF",
+    textAlign: "center",
+  },
+  popularCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: "hidden",
+  },
+  popularCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+  },
+  iconContainer: {
+    backgroundColor: "#F0F8FF",
+    borderRadius: 12,
+    padding: 10,
+    marginRight: 16,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  popularJobTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  exploreText: {
+    fontSize: 14,
+    color: "#666",
   },
 });
