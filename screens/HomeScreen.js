@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,25 +8,26 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
+  RefreshControl,
+  ActivityIndicator,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+const API_BASE_URL = 'https://6538-152-58-240-187.ngrok-free.app';
+
 const JobCard = ({ job, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
-    <Image source={{ uri: job.hiringOrganizationLogo }} style={styles.logo} />
+    <Image 
+      source={{ uri: job.logo_photo_url || 'https://via.placeholder.com/150' }} 
+      style={styles.logo} 
+    />
     <View style={styles.jobInfo}>
       <Text style={styles.jobTitle}>{job.title}</Text>
-      <Text style={styles.companyName}>{job.hiringOrganizationName}</Text>
+      <Text style={styles.companyName}>{job.company}</Text>
       <View style={styles.jobDetails}>
         <Ionicons name="location-outline" size={16} color="#666" />
         <Text style={styles.jobDetailText}>{job.location}</Text>
-        <Ionicons
-          name="briefcase-outline"
-          size={16}
-          color="#666"
-          style={styles.workModeIcon}
-        />
-        <Text style={styles.jobDetailText}>{job.workMode}</Text>
       </View>
     </View>
   </TouchableOpacity>
@@ -34,57 +35,47 @@ const JobCard = ({ job, onPress }) => (
 
 export default function HomeScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [location, setLocation] = useState("");
   const [jobs, setJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
-  // Static job data
-  const staticJobData = [
-    {
-      id: "66379fb86e9d493dae9761d1",
-      title: "Executive Assistant",
-      hiringOrganizationName: "Later",
-      hiringOrganizationLogo:
-        "https://s2-recruiting.cdn.greenhouse.io/external_greenhouse_job_boards/logos/401/064/900/resized/later-logo.jpg?1707860884",
-      datePosted: "2024-05-02T00:00:00.000Z",
-      workMode: "Hybrid",
-      location: "New York, NY",
-      description:
-        "We are seeking an experienced Executive Assistant to support our leadership team...",
-    },
-    {
-      id: "66379fbf6e9d493dae9761f4",
-      title: "Senior Product Manager",
-      hiringOrganizationName: "Later",
-      hiringOrganizationLogo:
-        "https://s2-recruiting.cdn.greenhouse.io/external_greenhouse_job_boards/logos/401/064/900/resized/later-logo.jpg?1707860884",
-      datePosted: "2024-05-02T00:00:00.000Z",
-      workMode: "Remote",
-      location: "Anywhere",
-      description:
-        "We're looking for a Senior Product Manager to lead our product development initiatives...",
-    },
-    {
-      id: "66379fb66e9d493dae9761c6",
-      title: "Senior DevOps Engineer",
-      hiringOrganizationName: "Later",
-      hiringOrganizationLogo:
-        "https://s2-recruiting.cdn.greenhouse.io/external_greenhouse_job_boards/logos/401/064/900/resized/later-logo.jpg?1707860884",
-      datePosted: "2024-05-01T00:00:00.000Z",
-      workMode: "On-site",
-      location: "San Francisco, CA",
-      description:
-        "Join our team as a Senior DevOps Engineer to help us scale our infrastructure...",
-    },
-  ];
+  const locations = ["India", "USA", "UK", "Canada", "Australia"];
 
-  const searchJobs = () => {
-    const filteredJobs = staticJobData.filter(
-      (job) =>
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.hiringOrganizationName
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())
-    );
-    setJobs(filteredJobs);
+  const fetchJobs = async (query, loc) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/jobs/?search=${encodeURIComponent(query)}&location=${encodeURIComponent(loc)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setJobs(data);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      fetchJobs(searchQuery, location);
+    }
+  };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchJobs(searchQuery || "Software Developer", location).then(() => setRefreshing(false));
+  }, [searchQuery, location]);
+
+  const handleLocationSelect = (loc) => {
+    setLocation(loc);
+    setShowLocationModal(false);
+    if (searchQuery.trim()) {
+      fetchJobs(searchQuery, loc);
+    }
   };
 
   return (
@@ -103,21 +94,70 @@ export default function HomeScreen({ navigation }) {
             placeholder="Search for jobs..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            onSubmitEditing={searchJobs}
+            onSubmitEditing={handleSearch}
           />
-        </View>
-        <FlatList
-          data={jobs.length > 0 ? jobs : staticJobData}
-          renderItem={({ item }) => (
-            <JobCard
-              job={item}
-              onPress={() => navigation.navigate("JobDetails", { job: item })}
+          <TouchableOpacity onPress={() => setShowLocationModal(true)}>
+            <Ionicons
+              name="location-outline"
+              size={24}
+              color={location ? "blue" : "gray"}
+              style={styles.locationIcon}
             />
-          )}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.jobList}
-        />
+          </TouchableOpacity>
+        </View>
+        {location && (
+          <Text style={styles.selectedLocation}>Location: {location}</Text>
+        )}
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+        ) : (
+          <FlatList
+            data={jobs}
+            renderItem={({ item }) => (
+              <JobCard
+                job={item}
+                onPress={() => navigation.navigate("JobDetails", { job: item })}
+              />
+            )}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.jobList}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            ListEmptyComponent={
+              <Text style={styles.emptyListText}>
+                {searchQuery ? "No jobs found. Try a different search or location." : "Search for jobs to see results."}
+              </Text>
+            }
+          />
+        )}
       </View>
+      <Modal
+        visible={showLocationModal}
+        transparent={true}
+        animationType="slide"
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalHeader}>Select Location</Text>
+            {locations.map((loc) => (
+              <TouchableOpacity
+                key={loc}
+                style={styles.locationItem}
+                onPress={() => handleLocationSelect(loc)}
+              >
+                <Text>{loc}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowLocationModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -200,9 +240,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginLeft: 4,
-    marginRight: 12,
   },
-  workModeIcon: {
-    marginLeft: 12,
+  emptyListText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#666',
+  },
+  loader: {
+    marginTop: 20,
+  },
+  locationIcon: {
+    marginLeft: 10,
+  },
+  selectedLocation: {
+    marginBottom: 10,
+    color: "blue",
+    fontWeight: "bold",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+    width: "80%",
+  },
+  modalHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  locationItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  closeButton: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "blue",
+    fontWeight: "bold",
   },
 });
