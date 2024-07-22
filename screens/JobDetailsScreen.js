@@ -6,33 +6,38 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function JobDetailsScreen({ route }) {
   const { job } = route.params;
 
+  const handleApply = () => {
+    if (job.job_url_direct) {
+      Linking.openURL(job.job_url_direct).catch((err) => console.error("Couldn't open URL: ", err));
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={{ uri: job.hiringOrganizationLogo }}
+          source={{ uri: job.logo_photo_url || 'https://via.placeholder.com/150' }}
           style={styles.logo}
         />
         <Text style={styles.title}>{job.title}</Text>
-        <Text style={styles.company}>{job.hiringOrganizationName}</Text>
+        <Text style={styles.company}>{job.company}</Text>
       </View>
       <View style={styles.detailsContainer}>
-        <DetailItem icon="location" text={job.location} />
-        <DetailItem icon="business" text={job.workMode} />
-        <DetailItem
-          icon="calendar"
-          text={new Date(job.datePosted).toLocaleDateString()}
-        />
+        <DetailItem icon="location-outline" text={job.location} />
+        <DetailItem icon="globe-outline" text={job.site} />
       </View>
       <Text style={styles.descriptionTitle}>Job Description</Text>
-      <Text style={styles.description}>{job.description}</Text>
-      <TouchableOpacity style={styles.applyButton}>
+      <Text style={styles.description}>
+        {job.description || "No description available."}
+      </Text>
+      <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
         <Text style={styles.applyButtonText}>Apply Now</Text>
       </TouchableOpacity>
     </ScrollView>
