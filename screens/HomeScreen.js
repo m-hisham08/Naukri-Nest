@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,7 +11,9 @@ import {
   RefreshControl,
   ActivityIndicator,
   Modal,
+  ScrollView,
 } from "react-native";
+import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from "@expo/vector-icons";
 
 const API_BASE_URL = 'https://6538-152-58-240-187.ngrok-free.app';
@@ -33,15 +35,66 @@ const JobCard = ({ job, onPress }) => (
   </TouchableOpacity>
 );
 
+const PopularJobCard = ({ title, onPress }) => (
+  <TouchableOpacity style={styles.popularCard} onPress={onPress}>
+    <View style={styles.popularCardContent}>
+      <Text style={styles.popularJobTitle}>{title}</Text>
+      <View style={styles.arrowContainer}>
+        <Ionicons name="arrow-forward" size={20} color="#007AFF" />
+      </View>
+    </View>
+  </TouchableOpacity>
+);
+
+const countries = ["India", "UAE"];
+
+const statesByCountry = {
+  "India": [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", 
+    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", 
+    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", 
+    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", 
+    "West Bengal"
+  ],
+  "UAE": [
+    "Abu Dhabi", "Dubai", "Sharjah", "Ajman", "Umm Al Quwain", "Ras Al Khaimah", "Fujairah"
+  ]
+};
+
+const citiesByState = {
+  "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangaluru", "Belgaum"],
+  "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"],
+  "Dubai": ["Dubai City", "Deira", "Bur Dubai"],
+  "Abu Dhabi": ["Abu Dhabi City", "Al Ain", "Ruwais"]
+};
+
+const popularJobs = [
+  "Software Developer",
+  "Digital Marketer",
+  "Data Scientist",
+  "UX Designer",
+  "Product Manager",
+  "Full Stack Developer",
+  "AI/ML Engineer",
+  "Cloud Architect",
+  "Cybersecurity Analyst",
+  "DevOps Engineer",
+  "Business Analyst",
+  "Frontend Developer",
+  "Backend Developer",
+  "Mobile App Developer",
+  "Blockchain Developer"
+];
+
 export default function HomeScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [location, setLocation] = useState("");
+  const [country, setCountry] = useState("India");
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
   const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-
-  const locations = ["India", "USA", "UK", "Canada", "Australia"];
 
   const fetchJobs = async (query, loc) => {
     setIsLoading(true);
@@ -59,58 +112,67 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      fetchJobs(searchQuery, location);
+  const handleSearch = (query = searchQuery) => {
+    if (query.trim()) {
+      const location = [city, state, country].filter(Boolean).join(", ");
+      fetchJobs(query, location);
     }
   };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchJobs(searchQuery || "Software Developer", location).then(() => setRefreshing(false));
-  }, [searchQuery, location]);
+    if (searchQuery) {
+      handleSearch();
+    }
+    setRefreshing(false);
+  }, [searchQuery, city, state, country]);
 
-  const handleLocationSelect = (loc) => {
-    setLocation(loc);
+  const handleLocationSelect = () => {
     setShowLocationModal(false);
     if (searchQuery.trim()) {
-      fetchJobs(searchQuery, loc);
+      handleSearch();
     }
   };
+
+  const handlePopularJobSelect = (job) => {
+    setSearchQuery(job);
+    handleSearch(job);
+  };
+
+  useEffect(() => {
+    setCountry("India");
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Text style={styles.header}>Naukri Nest</Text>
         <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={24}
-            color="gray"
-            style={styles.searchIcon}
-          />
+          <Ionicons name="search" size={24} color="gray" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search for jobs..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
+            onSubmitEditing={() => handleSearch()}
           />
           <TouchableOpacity onPress={() => setShowLocationModal(true)}>
             <Ionicons
               name="location-outline"
               size={24}
-              color={location ? "blue" : "gray"}
+              color={country ? "blue" : "gray"}
               style={styles.locationIcon}
             />
           </TouchableOpacity>
         </View>
-        {location && (
-          <Text style={styles.selectedLocation}>Location: {location}</Text>
+        {country && (
+          <Text style={styles.selectedLocation}>
+            Location: {[city, state, country].filter(Boolean).join(", ")}
+          </Text>
         )}
         {isLoading ? (
           <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
-        ) : (
+        ) : searchQuery ? (
           <FlatList
             data={jobs}
             renderItem={({ item }) => (
@@ -126,10 +188,25 @@ export default function HomeScreen({ navigation }) {
             }
             ListEmptyComponent={
               <Text style={styles.emptyListText}>
-                {searchQuery ? "No jobs found. Try a different search or location." : "Search for jobs to see results."}
+                No jobs found. Try a different search or location.
               </Text>
             }
           />
+        ) : (
+          <View>
+            <Text style={styles.popularJobsHeader}>Popular Job Roles</Text>
+            <FlatList
+              data={popularJobs}
+              renderItem={({ item }) => (
+                <PopularJobCard
+                  title={item}
+                  onPress={() => handlePopularJobSelect(item)}
+                />
+              )}
+              keyExtractor={(item) => item}
+              contentContainerStyle={styles.popularJobList}
+            />
+          </View>
         )}
       </View>
       <Modal
@@ -140,21 +217,68 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalHeader}>Select Location</Text>
-            {locations.map((loc) => (
-              <TouchableOpacity
-                key={loc}
-                style={styles.locationItem}
-                onPress={() => handleLocationSelect(loc)}
+            <ScrollView>
+              <Text style={styles.pickerLabel}>Country</Text>
+              <Picker
+                selectedValue={country}
+                onValueChange={(itemValue) => {
+                  setCountry(itemValue);
+                  setState("");
+                  setCity("");
+                }}
               >
-                <Text>{loc}</Text>
+                <Picker.Item label="Select a country" value="" />
+                {countries.map((c) => (
+                  <Picker.Item key={c} label={c} value={c} />
+                ))}
+              </Picker>
+
+              {country && (
+                <>
+                  <Text style={styles.pickerLabel}>State</Text>
+                  <Picker
+                    selectedValue={state}
+                    onValueChange={(itemValue) => {
+                      setState(itemValue);
+                      setCity("");
+                    }}
+                  >
+                    <Picker.Item label="Select a state" value="" />
+                    {statesByCountry[country].map((s) => (
+                      <Picker.Item key={s} label={s} value={s} />
+                    ))}
+                  </Picker>
+                </>
+              )}
+
+              {state && citiesByState[state] && (
+                <>
+                  <Text style={styles.pickerLabel}>City</Text>
+                  <Picker
+                    selectedValue={city}
+                    onValueChange={(itemValue) => setCity(itemValue)}
+                  >
+                    <Picker.Item label="Select a city" value="" />
+                    {citiesByState[state].map((c) => (
+                      <Picker.Item key={c} label={c} value={c} />
+                    ))}
+                  </Picker>
+                </>
+              )}
+
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={handleLocationSelect}
+              >
+                <Text style={styles.applyButtonText}>Apply</Text>
               </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowLocationModal(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowLocationModal(false)}
+              >
+                <Text style={styles.closeButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -269,23 +393,72 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     width: "80%",
+    maxHeight: "80%",
   },
   modalHeader: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
   },
-  locationItem: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+  pickerLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  applyButton: {
+    backgroundColor: "blue",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  applyButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
   closeButton: {
-    marginTop: 20,
+    marginTop: 10,
     alignItems: "center",
   },
   closeButtonText: {
     color: "blue",
     fontWeight: "bold",
+  },
+  popularJobsHeader: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#333",
+  },
+  popularJobList: {
+    paddingBottom: 20,
+  },
+  popularCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  popularCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+  },
+  popularJobTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+  },
+  arrowContainer: {
+    backgroundColor: '#F0F8FF',
+    borderRadius: 20,
+    padding: 8,
   },
 });
