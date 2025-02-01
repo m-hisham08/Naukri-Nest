@@ -24,7 +24,7 @@ Welcome to Naukri-Nest, a mobile application designed to assist you in your job 
    Navigate to the project directory using the `cd` command:
 
    ```bash
-   cd Naukri-Nest
+   cd Naukri-Nest/
    ```
 
    Then, install the project's dependencies using npm or yarn:
